@@ -33,7 +33,21 @@ export interface SearchResult {
   title: string;
   frequency?: string;
   units?: string;
+  source?: string;
 }
+
+export const SOURCES = [
+  { id: 'FRED', name: 'FRED (Federal Reserve)' },
+  { id: 'BLS', name: 'BLS (Bureau of Labor Statistics)' },
+  { id: 'OECD', name: 'OECD' },
+  { id: 'EUROSTAT', name: 'Eurostat' },
+  { id: 'IMF', name: 'IMF' },
+  { id: 'WORLDBANK', name: 'World Bank' },
+  { id: 'ECB', name: 'ECB (European Central Bank)' },
+  { id: 'BOE', name: 'Bank of England' },
+  { id: 'CENSUS', name: 'US Census Bureau' },
+  { id: 'EIA', name: 'EIA (Energy Information)' },
+];
 
 export interface FetchOptions {
   seriesId: string;
@@ -153,11 +167,12 @@ export async function fetchProfile(apiKey?: string | null): Promise<{ profile?: 
   }
 }
 
-export async function searchSeries(apiKey: string | null, query: string): Promise<SearchResult[]> {
+export async function searchSeries(apiKey: string | null, query: string, source?: string): Promise<SearchResult[]> {
   if (!query) return [];
   const headers: Record<string, string> = {};
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-  const url = `${BASE_URL}${SEARCH_PATH}?q=${encodeURIComponent(query)}`;
+  let url = `${BASE_URL}${SEARCH_PATH}?q=${encodeURIComponent(query)}`;
+  if (source) url += `&source=${encodeURIComponent(source)}`;
   const response = await fetch(url, { headers });
   if (!response.ok) {
     return [];
@@ -169,6 +184,26 @@ export async function searchSeries(apiKey: string | null, query: string): Promis
     title: item.title,
     frequency: item.frequency,
     units: item.units,
+    source: item.source,
+  }));
+}
+
+export async function browseBySource(apiKey: string | null, source: string): Promise<SearchResult[]> {
+  const headers: Record<string, string> = {};
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  const url = `${BASE_URL}${SEARCH_PATH}?source=${encodeURIComponent(source)}&limit=50`;
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    return [];
+  }
+  const body = await response.json();
+  if (!Array.isArray(body)) return [];
+  return body.map((item: any) => ({
+    id: item.id,
+    title: item.title,
+    frequency: item.frequency,
+    units: item.units,
+    source: item.source,
   }));
 }
 

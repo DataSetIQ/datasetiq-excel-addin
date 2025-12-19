@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CONNECT_MESSAGE, fetchProfile, searchSeries } from '../shared/api';
+import { CONNECT_MESSAGE, fetchProfile, searchSeries, browseBySource, SOURCES } from '../shared/api';
 import { 
   clearStoredApiKey, 
   getStoredApiKey, 
@@ -16,7 +16,7 @@ import type { MeResponse, SearchResult } from '../shared/api';
 declare const Excel: any;
 
 type ViewState = 'loading' | 'connected' | 'disconnected' | 'unsupported';
-type TabView = 'search' | 'favorites' | 'recent';
+type TabView = 'search' | 'favorites' | 'recent' | 'browse';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('loading');
@@ -28,6 +28,10 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabView>('search');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
+  const [selectedSource, setSelectedSource] = useState<string>('');
+  const [browseResults, setBrowseResults] = useState<SearchResult[]>([]);
+  const [previewSeries, setPreviewSeries] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
 
   useEffect(() => {
     bootstrap();
@@ -152,6 +156,38 @@ const App: React.FC = () => {
     }
     await loadFavoritesAndRecent();
   }
+  
+  async function handleBrowse(source: string) {
+    setSelectedSource(source);
+    const { key } = await getStoredApiKey();
+    const res = await browseBySource(key, source);
+    setBrowseResults(res);
+  }
+  
+  async function showPreview(seriesId: string) {
+    setPreviewSeries(seriesId);
+    setMessage('Loading preview...');
+    const { key } = await getStoredApiKey();
+    
+    try {
+      // Fetch latest value and metadata
+      const { fetchSeries } = await import('../shared/api');
+      const [latestRes, metaRes] = await Promise.all([
+        fetchSeries({ seriesId, mode: 'latest', apiKey: key }),
+        fetchSeries({ seriesId, mode: 'meta', apiKey: key })
+      ]);
+      
+      setPreviewData({
+        latest: latestRes.response?.scalar,
+        meta: metaRes.response?.meta,
+        error: latestRes.error || metaRes.error
+      });
+      setMessage('');
+    } catch (err: any) {
+      setPreviewData({ error: err.message });
+      setMessage('');
+    }
+  }
 
   const showConnect = view === 'disconnected' || view === 'unsupported';
 
@@ -241,6 +277,12 @@ const App: React.FC = () => {
             >
               🕒 Recent ({recent.length})
             </button>
+            <button 
+              className={`tab ${activeTab === 'browse' ? 'active' : ''}`}
+              onClick={() => setActiveTab('browse')}
+            >
+              📚 Browse
+            </button>
           </div>
           
           {activeTab === 'search' && (
@@ -267,6 +309,9 @@ const App: React.FC = () => {
                       <div className="muted">{r.title}</div>
                     </div>
                     <div className="result-buttons">
+                      <button className="preview-btn" onClick={() => showPreview(r.id)} title="Preview data">
+                        👁️
+                      </button>
                       <button className="fav-btn" onClick={() => toggleFavorite(r.id)} title={favorites.includes(r.id) ? 'Remove from favorites' : 'Add to favorites'}>
                         {favorites.includes(r.id) ? '⭐' : '☆'}
                       </button>
@@ -349,6 +394,55 @@ const App: React.FC = () => {
             )}
           </div>
           )}
+          
+          {activeTab === 'browse' && (
+          <div className="browse-view">
+            <label className="label">Select Data Source</label>
+            <select 
+              value={selectedSource} 
+              onChange={(e) => handleBrowse(e.target.value)}
+              style={{width: '100%', padding: '10px', marginBottom: '12px', borderRadius: '8px', border: '1px solid #e5e7eb'}}
+            >
+              <option value="">Choose a source...</option>
+              {SOURCES.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            
+            {browseResults.length === 0 && <div className="muted">Select a source to browse series.</div>}
+            {browseResults.length > 0 && (
+              <div className="results">
+                <div className="muted" style={{marginBottom: '8px'}}>
+                  Showing {browseResults.length} series from {selectedSource}
+                </div>
+                <ul>
+                  {browseResults.map((r) => (
+                    <li key={r.id} className="result-item">
+                      <div>
+                        <div className="result-id">{r.id}</div>
+                        <div className="muted">{r.title}</div>
+                      </div>
+                      <div className="result-buttons">
+                        <button className="fav-btn" onClick={() => toggleFavorite(r.id)} title={favorites.includes(r.id) ? 'Remove from favorites' : 'Add to favorites'}>
+                          {favorites.includes(r.id) ? '⭐' : '☆'}
+                        </button>
+                        <button className="insert-btn" onClick={() => insertFormula(r.id, 'DSIQ')} title="Insert DSIQ formula">
+                          📊
+                        </button>
+                        <button className="insert-btn" onClick={() => insertFormula(r.id, 'DSIQ_LATEST')} title="Insert DSIQ_LATEST formula">
+                          📈
+                        </button>
+                        <button className="insert-btn" onClick={() => insertFormula(r.id, 'DSIQ_YOY')} title="Insert DSIQ_YOY formula">
+                          📉
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          )}
         </section>
       )}
 
@@ -362,6 +456,55 @@ const App: React.FC = () => {
           <li>Meta: =DSIQ_META("FRED-GDP", "title")</li>
         </ul>
       </section>
+      
+      {previewSeries && (
+        <div className="preview-modal" onClick={() => setPreviewSeries(null)}>
+          <div className="preview-content" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-header">
+              <h3>{previewSeries}</h3>
+              <button className="close-btn" onClick={() => setPreviewSeries(null)}>✕</button>
+            </div>
+            {previewData?.error && (
+              <div className="muted" style={{color: '#b91c1c'}}>{previewData.error}</div>
+            )}
+            {previewData && !previewData.error && (
+              <div className="preview-body">
+                <div className="preview-item">
+                  <strong>Latest Value:</strong> {previewData.latest ?? 'N/A'}
+                </div>
+                {previewData.meta?.title && (
+                  <div className="preview-item">
+                    <strong>Title:</strong> {previewData.meta.title}
+                  </div>
+                )}
+                {previewData.meta?.frequency && (
+                  <div className="preview-item">
+                    <strong>Frequency:</strong> {previewData.meta.frequency}
+                  </div>
+                )}
+                {previewData.meta?.units && (
+                  <div className="preview-item">
+                    <strong>Units:</strong> {previewData.meta.units}
+                  </div>
+                )}
+                {previewData.meta?.updated && (
+                  <div className="preview-item">
+                    <strong>Last Updated:</strong> {previewData.meta.updated}
+                  </div>
+                )}
+                <div className="row" style={{marginTop: '16px'}}>
+                  <button onClick={() => { insertFormula(previewSeries, 'DSIQ'); setPreviewSeries(null); }}>
+                    Insert Array
+                  </button>
+                  <button className="secondary" onClick={() => { insertFormula(previewSeries, 'DSIQ_LATEST'); setPreviewSeries(null); }}>
+                    Insert Latest
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

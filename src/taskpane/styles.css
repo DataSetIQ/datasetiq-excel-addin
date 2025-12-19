@@ -178,6 +178,86 @@ button.secondary {
   background: #f9fafb;
 }
 
+.preview-btn {
+  background: #8b5cf6;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.preview-btn:hover {
+  background: #7c3aed;
+}
+
+.preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.preview-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 90%;
+  max-height: 80%;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 12px;
+}
+
+.preview-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.close-btn {
+  background: transparent;
+  color: #6b7280;
+  padding: 4px 8px;
+  font-size: 18px;
+  border-radius: 4px;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+  color: #0f172a;
+}
+
+.preview-body {
+  padding: 8px 0;
+}
+
+.preview-item {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.preview-item strong {
+  color: #6b7280;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
 .result-id {
   font-weight: 600;
 }
