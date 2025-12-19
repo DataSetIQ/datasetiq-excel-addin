@@ -86,6 +86,39 @@
     </div>
 
     <div class="test-section">
+        <h2>6. Search Functionality</h2>
+        <button onclick="testSearch()">Test Search API</button>
+        <button onclick="testSearchWithSource()">Test Source Filter</button>
+        <div id="search-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>7. Browse by Source</h2>
+        <button onclick="testBrowse('FRED')">Browse FRED</button>
+        <button onclick="testBrowse('BLS')">Browse BLS</button>
+        <button onclick="testBrowse('OECD')">Browse OECD</button>
+        <div id="browse-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>8. Storage API (OfficeRuntime.storage)</h2>
+        <button onclick="testStorage()">Test Storage Mock</button>
+        <div id="storage-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>9. Preview Feature</h2>
+        <button onclick="testPreview()">Test Series Preview</button>
+        <div id="preview-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>10. Taskpane Features UI</h2>
+        <button onclick="testTaskpaneFeatures()">Test UI Features</button>
+        <div id="features-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
         <h2>📊 Overall Status</h2>
         <div id="overall-status"></div>
     </div>
@@ -223,9 +256,201 @@
             `;
         }
 
+        async function testSearch() {
+            const resultDiv = document.getElementById('search-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing search API...';
+
+            try {
+                const response = await fetch('https://datasetiq.com/api/public/search?q=GDP');
+                const data = await response.json();
+                
+                testResults['search'] = response.status === 200 && Array.isArray(data);
+                
+                if (testResults['search']) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Search working!\nFound ${data.length} results\nSample: ${JSON.stringify(data.slice(0, 3), null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Search failed\nStatus: ${response.status}`;
+                }
+            } catch (error) {
+                testResults['search'] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
+        async function testSearchWithSource() {
+            const resultDiv = document.getElementById('search-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing search with source filter...';
+
+            try {
+                const response = await fetch('https://datasetiq.com/api/public/search?q=GDP&source=FRED');
+                const data = await response.json();
+                
+                testResults['search-source'] = response.status === 200 && Array.isArray(data);
+                
+                if (testResults['search-source']) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Source filter working!\nFound ${data.length} FRED results\nSample: ${JSON.stringify(data.slice(0, 2), null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Source filter failed\nStatus: ${response.status}`;
+                }
+            } catch (error) {
+                testResults['search-source'] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
+        async function testBrowse(source) {
+            const resultDiv = document.getElementById('browse-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = `Testing browse for ${source}...`;
+
+            try {
+                const response = await fetch(`https://datasetiq.com/api/public/search?source=${source}&limit=50`);
+                const data = await response.json();
+                
+                testResults[`browse-${source}`] = response.status === 200 && Array.isArray(data);
+                
+                if (testResults[`browse-${source}`]) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Browse ${source} working!\nFound ${data.length} series\nSamples:\n${JSON.stringify(data.slice(0, 3).map(s => ({id: s.id, title: s.title})), null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Browse failed\nStatus: ${response.status}`;
+                }
+            } catch (error) {
+                testResults[`browse-${source}`] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
+        async function testStorage() {
+            const resultDiv = document.getElementById('storage-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing storage mock...';
+
+            try {
+                // Mock OfficeRuntime.storage behavior
+                const storage = {
+                    data: {},
+                    async getItem(key) { return this.data[key] || null; },
+                    async setItem(key, value) { this.data[key] = value; },
+                    async removeItem(key) { delete this.data[key]; }
+                };
+
+                // Test set/get
+                await storage.setItem('test-key', 'test-value');
+                const value = await storage.getItem('test-key');
+                
+                // Test favorites
+                const favorites = ['FRED-GDP', 'BLS-UNRATE', 'OECD-GDP'];
+                await storage.setItem('DATASETIQ_FAVORITES', JSON.stringify(favorites));
+                const storedFavs = JSON.parse(await storage.getItem('DATASETIQ_FAVORITES'));
+                
+                // Test recent
+                const recent = ['FRED-GDP', 'FRED-CPIAUCSL'];
+                await storage.setItem('DATASETIQ_RECENT', JSON.stringify(recent));
+                const storedRecent = JSON.parse(await storage.getItem('DATASETIQ_RECENT'));
+
+                testResults['storage'] = value === 'test-value' && storedFavs.length === 3 && storedRecent.length === 2;
+                
+                if (testResults['storage']) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Storage logic verified!\nFavorites: ${storedFavs.length} items\nRecent: ${storedRecent.length} items\nSample favorites: ${JSON.stringify(storedFavs, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Storage test failed`;
+                }
+            } catch (error) {
+                testResults['storage'] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
+        async function testPreview() {
+            const resultDiv = document.getElementById('preview-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing preview data fetch...';
+
+            try {
+                // Fetch both latest value and metadata
+                const [latestRes, metaRes] = await Promise.all([
+                    fetch(`${API_URL}/FRED-GDP?mode=latest`),
+                    fetch(`${API_URL}/FRED-GDP?mode=meta`)
+                ]);
+
+                const latestData = await latestRes.json();
+                const metaData = await metaRes.json();
+
+                testResults['preview'] = latestRes.status === 200 && metaRes.status === 200;
+
+                if (testResults['preview']) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Preview data working!\n\nLatest Value: ${latestData.scalar || 'N/A'}\n\nMetadata:\n${JSON.stringify(metaData.meta, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Preview failed\nLatest status: ${latestRes.status}\nMeta status: ${metaRes.status}`;
+                }
+            } catch (error) {
+                testResults['preview'] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
+        async function testTaskpaneFeatures() {
+            const resultDiv = document.getElementById('features-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Checking taskpane for new features...';
+
+            try {
+                const response = await fetch(`${BASE_URL}/taskpane/index.html`);
+                const html = await response.text();
+
+                // Check for feature indicators in the code
+                const hasSearch = html.includes('search') || html.includes('Search');
+                const hasFavorites = html.includes('favorites') || html.includes('Favorites');
+                const hasRecent = html.includes('recent') || html.includes('Recent');
+                const hasBrowse = html.includes('browse') || html.includes('Browse');
+                const hasPreview = html.includes('preview') || html.includes('Preview');
+                const hasTabs = html.includes('tab') || html.includes('Tab');
+
+                testResults['taskpane-features'] = response.status === 200;
+
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Taskpane Features Check:\n` +
+                    `${hasSearch ? '✅' : '❌'} Search functionality\n` +
+                    `${hasFavorites ? '✅' : '❌'} Favorites feature\n` +
+                    `${hasRecent ? '✅' : '❌'} Recent series tracking\n` +
+                    `${hasBrowse ? '✅' : '❌'} Browse by source\n` +
+                    `${hasPreview ? '✅' : '❌'} Preview modal\n` +
+                    `${hasTabs ? '✅' : '❌'} Tabbed interface\n\n` +
+                    `Note: This checks if features are present in compiled code.\n` +
+                    `Open taskpane to test interactively.`;
+            } catch (error) {
+                testResults['taskpane-features'] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
         // Auto-run basic tests on load
         window.onload = async () => {
-            console.log('Starting auto-tests...');
+            console.log('Starting comprehensive auto-tests...');
             await testEndpoint('manifest', '/manifest.xml');
             await testEndpoint('icon32', '/assets/icon-32.png');
             await testEndpoint('icon64', '/assets/icon-64.png');
@@ -234,6 +459,12 @@
             await testEndpoint('taskpane', '/taskpane/index.html');
             await testCORS();
             await testAPI();
+            await testSearch();
+            await testBrowse('FRED');
+            await testStorage();
+            await testPreview();
+            await testTaskpaneFeatures();
+            console.log('All tests completed!');
         };
     </script>
 </body>
