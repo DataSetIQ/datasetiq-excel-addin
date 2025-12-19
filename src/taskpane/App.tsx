@@ -3,6 +3,9 @@ import { CONNECT_MESSAGE, fetchProfile, searchSeries } from '../shared/api';
 import { clearStoredApiKey, getStoredApiKey, setStoredApiKey } from '../shared/storage';
 import type { MeResponse, SearchResult } from '../shared/api';
 
+// Type declaration for Excel global
+declare const Excel: any;
+
 type ViewState = 'loading' | 'connected' | 'disconnected' | 'unsupported';
 
 const App: React.FC = () => {
@@ -79,6 +82,38 @@ const App: React.FC = () => {
     const { key } = await getStoredApiKey();
     const res = await searchSeries(key, searchQuery.trim());
     setResults(res);
+  }
+
+  async function insertFormula(seriesId: string, functionName: string = 'DSIQ') {
+    try {
+      await Excel.run(async (context) => {
+        const sheet = context.workbook.worksheets.getActiveWorksheet();
+        const range = sheet.getRange();
+        range.load('address');
+        await context.sync();
+        
+        const selectedRange = context.workbook.getSelectedRange();
+        let formula = '';
+        switch(functionName) {
+          case 'DSIQ':
+            formula = `=DSIQ("${seriesId}")`;
+            break;
+          case 'DSIQ_LATEST':
+            formula = `=DSIQ_LATEST("${seriesId}")`;
+            break;
+          case 'DSIQ_YOY':
+            formula = `=DSIQ_YOY("${seriesId}")`;
+            break;
+          default:
+            formula = `=DSIQ("${seriesId}")`;
+        }
+        selectedRange.formulas = [[formula]];
+        await context.sync();
+        setMessage(`Inserted ${functionName}("${seriesId}")`);
+      });
+    } catch (err: any) {
+      setMessage(err.message || 'Unable to insert formula');
+    }
   }
 
   const showConnect = view === 'disconnected' || view === 'unsupported';
@@ -166,9 +201,22 @@ const App: React.FC = () => {
             {results.length > 0 && (
               <ul>
                 {results.map((r) => (
-                  <li key={r.id}>
-                    <div className="result-id">{r.id}</div>
-                    <div className="muted">{r.title}</div>
+                  <li key={r.id} className="result-item">
+                    <div>
+                      <div className="result-id">{r.id}</div>
+                      <div className="muted">{r.title}</div>
+                    </div>
+                    <div className="result-buttons">
+                      <button className="insert-btn" onClick={() => insertFormula(r.id, 'DSIQ')} title="Insert DSIQ formula">
+                        📊 Array
+                      </button>
+                      <button className="insert-btn" onClick={() => insertFormula(r.id, 'DSIQ_LATEST')} title="Insert DSIQ_LATEST formula">
+                        📈 Latest
+                      </button>
+                      <button className="insert-btn" onClick={() => insertFormula(r.id, 'DSIQ_YOY')} title="Insert DSIQ_YOY formula">
+                        📉 YoY
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

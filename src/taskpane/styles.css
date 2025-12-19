@@ -111,6 +111,33 @@ button.secondary {
   border-bottom: 1px solid #f1f5f9;
 }
 
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-buttons {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.insert-btn {
+  background: #0ea5e9;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.insert-btn:hover {
+  background: #0284c7;
+}
+
 .result-id {
   font-weight: 600;
 }
