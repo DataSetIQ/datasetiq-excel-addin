@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CONNECT_MESSAGE, fetchProfile, searchSeries, browseBySource, SOURCES, isPaidPlan, PREMIUM_FEATURES, getUpgradeMessage } from '../shared/api';
+import { CONNECT_MESSAGE, checkApiKey, searchSeries, browseBySource, SOURCES, isPaidPlan, PREMIUM_FEATURES, getUpgradeMessage } from '../shared/api';
 import { 
   clearStoredApiKey, 
   getStoredApiKey, 
@@ -10,7 +10,7 @@ import {
   getRecent,
   addRecent
 } from '../shared/storage';
-import type { MeResponse, SearchResult } from '../shared/api';
+import type { SearchResult } from '../shared/api';
 
 // Type declaration for Excel global
 declare const Excel: any;
@@ -21,7 +21,7 @@ type TabView = 'search' | 'favorites' | 'recent' | 'browse' | 'builder' | 'templ
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('loading');
   const [message, setMessage] = useState('Loading...');
-  const [profile, setProfile] = useState<MeResponse | null>(null);
+  const [isPaid, setIsPaid] = useState<boolean>(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -74,14 +74,16 @@ const App: React.FC = () => {
   async function loadProfile(key: string) {
     setView('loading');
     setMessage('Connecting...');
-    const { profile, error } = await fetchProfile(key);
-    if (error || !profile) {
-      setProfile(null);
+    const { valid, error } = await checkApiKey(key);
+    if (!valid || error) {
+      setIsPaid(false);
       setView('disconnected');
-      setMessage(error || 'Unable to connect. Please re-enter your API key.');
+      setMessage(error || 'Invalid API key. Please re-enter your API key.');
       return;
     }
-    setProfile(profile);
+    // Note: Cannot determine plan level from API, defaulting to free
+    // Premium features would require authentication through web app
+    setIsPaid(false);
     setView('connected');
     setMessage('Connected');
   }
@@ -198,11 +200,10 @@ const App: React.FC = () => {
   }
   
   function checkPremiumAccess(feature: string): boolean {
-    if (!profile || !isPaidPlan(profile.plan)) {
-      setMessage(getUpgradeMessage(feature));
-      return false;
-    }
-    return true;
+    // Note: Premium plan detection not available from public API
+    // All users have access to basic features only
+    setMessage(getUpgradeMessage(feature));
+    return false; // Premium features disabled until authentication is added
   }
   
   function openBuilder() {
@@ -409,30 +410,17 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {view === 'connected' && profile && (
+      {view === 'connected' && (
         <section className="card">
           <div className="card-title">Account</div>
           <div className="row">
             <div>
-              <div className="label">Email</div>
-              <div>{profile.email}</div>
-            </div>
-            <div>
-              <div className="label">Plan</div>
-              <div className="pill">{profile.plan}</div>
+              <div className="label">Status</div>
+              <div className="pill">✅ Connected</div>
             </div>
           </div>
           <div className="row">
-            <div>
-              <div className="label">Quota</div>
-              <div>
-                {profile.quota.used} / {profile.quota.limit} (resets {profile.quota.reset})
-              </div>
-            </div>
-            <div>
-              <div className="label">Status</div>
-              <div>{profile.status}</div>
-            </div>
+            <div className="muted">Visit datasetiq.com/dashboard for account details and usage</div>
           </div>
           <div className="row end">
             <button className="secondary" onClick={handleDisconnect}>

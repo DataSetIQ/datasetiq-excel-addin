@@ -1,7 +1,7 @@
 export const BASE_URL = 'https://www.datasetiq.com';
 export const CONNECT_MESSAGE = 'Please open DataSetIQ sidebar to connect.';
-const SERIES_PATH = '/api/public/sheets/series/';
-const ME_PATH = '/api/public/sheets/me';
+const SERIES_PATH = '/api/public/series/';
+const SERIES_DATA_PATH = '/data';
 const SEARCH_PATH = '/api/public/search';
 export const HEADER_ROW = ['Date', 'Value'];
 
@@ -15,18 +15,16 @@ export type ErrorCode =
   | 'UNKNOWN';
 
 export interface SeriesResponse {
-  meta?: { id: string; etag: string; [key: string]: any };
-  data?: Array<[string, number]>;
+  seriesId?: string;
+  data?: Array<{ date: string; value: number }>;
+  dataset?: any;
   scalar?: number;
   error?: { code: string; message: string };
+  message?: string;
+  status?: string;
 }
 
-export interface MeResponse {
-  email: string;
-  plan: string;
-  quota: { used: number; limit: number; reset: string };
-  status: string;
-}
+// Note: No public user profile endpoint available in production API
 
 export const PAID_PLANS = ['premium', 'pro', 'enterprise', 'Premium', 'Pro', 'Enterprise'];
 
@@ -114,21 +112,37 @@ export function normalizeDateInput(value: any): string | undefined {
   throw new Error('Invalid date input.');
 }
 
-export function buildArrayResult(data: Array<[string, number]>): any[][] {
-  if (!Array.isArray(data)) {
+export function buildArrayResult(data: Array<[string, number]> | Array<{date: string; value: number}>): any[][] {
+  if (!Array.isArray(data) || data.length === 0) {
     return [HEADER_ROW];
   }
-  const sorted = [...data].sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+  // Handle both formats: [[date, value]] or [{date, value}]
+  const normalized = data[0] && typeof data[0] === 'object' && 'date' in data[0]
+    ? (data as Array<{date: string; value: number}>).map(obs => [obs.date, obs.value] as [string, number])
+    : data as Array<[string, number]>;
+  
+  const sorted = [...normalized].sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
   return [HEADER_ROW, ...sorted];
 }
 
 export async function fetchSeries(options: FetchOptions): Promise<FetchResult> {
   const { seriesId, mode, apiKey, freq, start, date } = options;
-  const url = new URL(`${BASE_URL}${SERIES_PATH}${encodeURIComponent(seriesId)}`);
-  url.searchParams.set('mode', mode);
-  if (freq) url.searchParams.set('freq', freq);
-  if (start) url.searchParams.set('start', start);
-  if (date) url.searchParams.set('date', date);
+  
+  // For metadata mode, use /api/public/series/[id]
+  // For data modes, use /api/public/series/[id]/data
+  const isMetaMode = mode === 'meta';
+  const endpoint = isMetaMode 
+    ? `${BASE_URL}${SERIES_PATH}${encodeURIComponent(seriesId)}`
+    : `${BASE_URL}${SERIES_PATH}${encodeURIComponent(seriesId)}${SERIES_DATA_PATH}`;
+  
+  const url = new URL(endpoint);
+  if (!isMetaMode) {
+    // Data endpoint parameters
+    if (start) url.searchParams.set('start', start);
+    if (date) url.searchParams.set('end', date);
+    // Set higher limit for authenticated requests
+    url.searchParams.set('limit', apiKey ? '1000' : '100');
+  }
 
   const headers: Record<string, string> = {};
   if (apiKey) {
@@ -142,7 +156,27 @@ export async function fetchSeries(options: FetchOptions): Promise<FetchResult> {
       const status = response.status;
       const body = await safeJson(response);
       if (status >= 200 && status < 300 && !body?.error) {
-        return { response: body as SeriesResponse, status };
+        // Transform new API response to expected format
+        let transformedResponse: SeriesResponse;
+        if (mode === 'meta' && body.dataset) {
+          // Metadata response
+          transformedResponse = { dataset: body.dataset };
+        } else if (body.data) {
+          // Data response - transform [{date, value}] to [[date, value]]
+          const dataArray = body.data.map((obs: any) => [obs.date, obs.value]);
+          transformedResponse = { data: dataArray, seriesId: body.seriesId };
+          
+          // Handle scalar modes (latest, value, yoy)
+          if (mode === 'latest' && dataArray.length > 0) {
+            const latest = dataArray[dataArray.length - 1];
+            transformedResponse.scalar = latest[1];
+          } else if (mode === 'value' && dataArray.length > 0) {
+            transformedResponse.scalar = dataArray[0][1];
+          }
+        } else {
+          transformedResponse = body;
+        }
+        return { response: transformedResponse, status };
       }
       const retryable = status === 429 || status >= 500;
       if (retryable && attempt === 0) {
@@ -166,21 +200,21 @@ export async function fetchSeries(options: FetchOptions): Promise<FetchResult> {
   return { error: 'Unable to reach DataSetIQ. Please try again.' };
 }
 
-export async function fetchProfile(apiKey?: string | null): Promise<{ profile?: MeResponse; error?: string }> {
-  const headers: Record<string, string> = {};
-  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+// Note: User profile endpoint not available in public API
+// Premium plan detection would require a separate authenticated endpoint
+export async function checkApiKey(apiKey?: string | null): Promise<{ valid: boolean; error?: string }> {
+  if (!apiKey) return { valid: false, error: 'No API key provided' };
+  
+  const headers: Record<string, string> = { Authorization: `Bearer ${apiKey}` };
   try {
-    const response = await fetch(`${BASE_URL}${ME_PATH}`, { headers });
-    if (response.status === 401) {
-      return { error: 'Invalid API Key. Please reconnect.' };
+    // Test API key by making a minimal search request
+    const response = await fetch(`${BASE_URL}${SEARCH_PATH}?q=test&limit=1`, { headers });
+    if (response.status === 401 || response.status === 403) {
+      return { valid: false, error: 'Invalid API Key' };
     }
-    if (!response.ok) {
-      return { error: 'Unable to fetch profile.' };
-    }
-    const body = await response.json();
-    return { profile: body as MeResponse };
+    return { valid: response.ok };
   } catch (err: any) {
-    return { error: err.message || 'Unable to fetch profile.' };
+    return { valid: false, error: err.message || 'Unable to verify API key' };
   }
 }
 
