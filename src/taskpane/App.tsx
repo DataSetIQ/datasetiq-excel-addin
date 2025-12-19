@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { CONNECT_MESSAGE, fetchProfile, searchSeries } from '../shared/api';
-import { clearStoredApiKey, getStoredApiKey, setStoredApiKey } from '../shared/storage';
+import { 
+  clearStoredApiKey, 
+  getStoredApiKey, 
+  setStoredApiKey,
+  getFavorites,
+  addFavorite,
+  removeFavorite,
+  getRecent,
+  addRecent
+} from '../shared/storage';
 import type { MeResponse, SearchResult } from '../shared/api';
 
 // Type declaration for Excel global
 declare const Excel: any;
 
 type ViewState = 'loading' | 'connected' | 'disconnected' | 'unsupported';
+type TabView = 'search' | 'favorites' | 'recent';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('loading');
@@ -15,6 +25,9 @@ const App: React.FC = () => {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [activeTab, setActiveTab] = useState<TabView>('search');
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [recent, setRecent] = useState<string[]>([]);
 
   useEffect(() => {
     bootstrap();
@@ -27,12 +40,23 @@ const App: React.FC = () => {
       setMessage(CONNECT_MESSAGE);
       return;
     }
+    
+    // Load favorites and recent regardless of connection
+    await loadFavoritesAndRecent();
+    
     if (!key) {
       setView('disconnected');
       setMessage('Connect your account to unlock quota and entitlements.');
       return;
     }
     await loadProfile(key);
+  }
+  
+  async function loadFavoritesAndRecent() {
+    const favs = await getFavorites();
+    const rec = await getRecent();
+    setFavorites(favs);
+    setRecent(rec);
   }
 
   async function loadProfile(key: string) {
@@ -110,10 +134,23 @@ const App: React.FC = () => {
         selectedRange.formulas = [[formula]];
         await context.sync();
         setMessage(`Inserted ${functionName}("${seriesId}")`);
+        
+        // Add to recent
+        await addRecent(seriesId);
+        await loadFavoritesAndRecent();
       });
     } catch (err: any) {
       setMessage(err.message || 'Unable to insert formula');
     }
+  }
+  
+  async function toggleFavorite(seriesId: string) {
+    if (favorites.includes(seriesId)) {
+      await removeFavorite(seriesId);
+    } else {
+      await addFavorite(seriesId);
+    }
+    await loadFavoritesAndRecent();
   }
 
   const showConnect = view === 'disconnected' || view === 'unsupported';
@@ -184,7 +221,30 @@ const App: React.FC = () => {
 
       {view === 'connected' && (
         <section className="card">
-          <div className="card-title">Search series</div>
+          <div className="card-title">Series Lookup</div>
+          <div className="tabs">
+            <button 
+              className={`tab ${activeTab === 'search' ? 'active' : ''}`}
+              onClick={() => setActiveTab('search')}
+            >
+              🔍 Search
+            </button>
+            <button 
+              className={`tab ${activeTab === 'favorites' ? 'active' : ''}`}
+              onClick={() => setActiveTab('favorites')}
+            >
+              ⭐ Favorites ({favorites.length})
+            </button>
+            <button 
+              className={`tab ${activeTab === 'recent' ? 'active' : ''}`}
+              onClick={() => setActiveTab('recent')}
+            >
+              🕒 Recent ({recent.length})
+            </button>
+          </div>
+          
+          {activeTab === 'search' && (
+          <>
           <form onSubmit={handleSearch}>
             <input
               placeholder='Try "FRED-GDP"'
@@ -207,6 +267,9 @@ const App: React.FC = () => {
                       <div className="muted">{r.title}</div>
                     </div>
                     <div className="result-buttons">
+                      <button className="fav-btn" onClick={() => toggleFavorite(r.id)} title={favorites.includes(r.id) ? 'Remove from favorites' : 'Add to favorites'}>
+                        {favorites.includes(r.id) ? '⭐' : '☆'}
+                      </button>
                       <button className="insert-btn" onClick={() => insertFormula(r.id, 'DSIQ')} title="Insert DSIQ formula">
                         📊 Array
                       </button>
@@ -222,6 +285,70 @@ const App: React.FC = () => {
               </ul>
             )}
           </div>
+          </>
+          )}
+          
+          {activeTab === 'favorites' && (
+          <div className="favorites-list">
+            {favorites.length === 0 && <div className="muted">No favorites yet. Click ⭐ to add series.</div>}
+            {favorites.length > 0 && (
+              <ul>
+                {favorites.map((id) => (
+                  <li key={id} className="result-item">
+                    <div>
+                      <div className="result-id">{id}</div>
+                    </div>
+                    <div className="result-buttons">
+                      <button className="fav-btn" onClick={() => toggleFavorite(id)} title="Remove from favorites">
+                        ⭐
+                      </button>
+                      <button className="insert-btn" onClick={() => insertFormula(id, 'DSIQ')} title="Insert DSIQ formula">
+                        📊
+                      </button>
+                      <button className="insert-btn" onClick={() => insertFormula(id, 'DSIQ_LATEST')} title="Insert DSIQ_LATEST formula">
+                        📈
+                      </button>
+                      <button className="insert-btn" onClick={() => insertFormula(id, 'DSIQ_YOY')} title="Insert DSIQ_YOY formula">
+                        📉
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          )}
+          
+          {activeTab === 'recent' && (
+          <div className="recent-list">
+            {recent.length === 0 && <div className="muted">No recent series yet. Insert a formula to track history.</div>}
+            {recent.length > 0 && (
+              <ul>
+                {recent.map((id) => (
+                  <li key={id} className="result-item">
+                    <div>
+                      <div className="result-id">{id}</div>
+                    </div>
+                    <div className="result-buttons">
+                      <button className="fav-btn" onClick={() => toggleFavorite(id)} title={favorites.includes(id) ? 'Remove from favorites' : 'Add to favorites'}>
+                        {favorites.includes(id) ? '⭐' : '☆'}
+                      </button>
+                      <button className="insert-btn" onClick={() => insertFormula(id, 'DSIQ')} title="Insert DSIQ formula">
+                        📊
+                      </button>
+                      <button className="insert-btn" onClick={() => insertFormula(id, 'DSIQ_LATEST')} title="Insert DSIQ_LATEST formula">
+                        📈
+                      </button>
+                      <button className="insert-btn" onClick={() => insertFormula(id, 'DSIQ_YOY')} title="Insert DSIQ_YOY formula">
+                        📉
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          )}
         </section>
       )}
 

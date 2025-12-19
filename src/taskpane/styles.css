@@ -138,6 +138,46 @@ button.secondary {
   background: #0284c7;
 }
 
+.fav-btn {
+  background: #f59e0b;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.fav-btn:hover {
+  background: #d97706;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab {
+  background: transparent;
+  color: #6b7280;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.tab.active {
+  color: #0f172a;
+  border-bottom-color: #0ea5e9;
+}
+
+.tab:hover {
+  background: #f9fafb;
+}
+
 .result-id {
   font-weight: 600;
 }
