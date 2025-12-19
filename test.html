@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>DataSetIQ Excel Add-in Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #0f172a; }
+        h2 { color: #475569; margin-top: 0; }
+        button {
+            background: #0f172a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1e293b; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-left: 3px solid #0f172a;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { border-color: #10b981; }
+        .error { border-color: #ef4444; color: #dc2626; }
+        .status { display: inline-block; margin-left: 10px; }
+        .status.ok { color: #10b981; }
+        .status.fail { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🧪 DataSetIQ Excel Add-in Test Suite</h1>
+    <p>Testing all endpoints and functionality without Excel</p>
+
+    <div class="test-section">
+        <h2>1. Manifest & Icons</h2>
+        <button onclick="testEndpoint('manifest', '/manifest.xml')">Test Manifest</button>
+        <button onclick="testEndpoint('icon32', '/assets/icon-32.png')">Test Icon 32</button>
+        <button onclick="testEndpoint('icon64', '/assets/icon-64.png')">Test Icon 64</button>
+        <div id="manifest-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Custom Functions Files</h2>
+        <button onclick="testEndpoint('functions.js', '/functions.js')">functions.js</button>
+        <button onclick="testEndpoint('functions.json', '/functions.json')">functions.json</button>
+        <button onclick="testEndpoint('functions.html', '/functions.html')">functions.html</button>
+        <div id="functions-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Taskpane UI</h2>
+        <button onclick="testEndpoint('taskpane', '/taskpane/index.html')">taskpane/index.html</button>
+        <button onclick="window.open('https://plugins.datasetiq.com/taskpane/index.html', '_blank')">Open Taskpane</button>
+        <div id="taskpane-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. API Integration Test</h2>
+        <button onclick="testAPI()">Test FRED-GDP API</button>
+        <button onclick="testAPIWithKey()">Test with API Key</button>
+        <div id="api-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. CORS Headers</h2>
+        <button onclick="testCORS()">Test CORS</button>
+        <div id="cors-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Overall Status</h2>
+        <div id="overall-status"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://plugins.datasetiq.com';
+        const API_URL = 'https://datasetiq.com/api/public/sheets/series';
+        let testResults = {};
+
+        async function testEndpoint(name, path) {
+            const resultDiv = document.getElementById(name.includes('.') ? name.split('.')[0] + '-result' : name + '-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = `Testing ${path}...`;
+
+            try {
+                const response = await fetch(BASE_URL + path);
+                const status = response.status;
+                const statusText = status === 200 ? '✅ OK' : `❌ Failed (${status})`;
+                
+                testResults[name] = status === 200;
+                
+                if (status === 200) {
+                    const contentType = response.headers.get('content-type');
+                    const size = response.headers.get('content-length') || 'unknown';
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `${statusText}\nContent-Type: ${contentType}\nSize: ${size} bytes`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `${statusText}\n${await response.text()}`;
+                }
+            } catch (error) {
+                testResults[name] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing API without authentication...';
+
+            try {
+                const response = await fetch(`${API_URL}/FRED-GDP?mode=latest`);
+                const data = await response.json();
+                
+                testResults['api'] = response.status === 200 || response.status === 401;
+                
+                if (data.error) {
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = `✅ API responding correctly\nError Code: ${data.error.code}\nMessage: ${data.error.message}`;
+                } else {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ API working!\nLatest GDP: ${data.scalar}\nResponse: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                testResults['api'] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ API Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
+        async function testAPIWithKey() {
+            const key = prompt('Enter your DataSetIQ API key (optional):');
+            if (!key) return;
+
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing API with authentication...';
+
+            try {
+                const response = await fetch(`${API_URL}/FRED-GDP?mode=latest`, {
+                    headers: { 'Authorization': `Bearer ${key}` }
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ ${data.error.message}\nCode: ${data.error.code}`;
+                } else {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Authenticated successfully!\nLatest GDP: ${data.scalar}\nFull response:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testCORS() {
+            const resultDiv = document.getElementById('cors-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing CORS headers...';
+
+            try {
+                const response = await fetch(`${BASE_URL}/functions.js`);
+                const corsOrigin = response.headers.get('access-control-allow-origin');
+                const corsMethods = response.headers.get('access-control-allow-methods');
+                const corsHeaders = response.headers.get('access-control-allow-headers');
+
+                testResults['cors'] = corsOrigin === '*';
+
+                if (corsOrigin === '*') {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ CORS configured correctly\n` +
+                        `Origin: ${corsOrigin}\n` +
+                        `Methods: ${corsMethods}\n` +
+                        `Headers: ${corsHeaders}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ CORS not configured\nOrigin: ${corsOrigin || 'missing'}`;
+                }
+            } catch (error) {
+                testResults['cors'] = false;
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+            updateOverallStatus();
+        }
+
+        function updateOverallStatus() {
+            const total = Object.keys(testResults).length;
+            const passed = Object.values(testResults).filter(r => r).length;
+            const percentage = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+            const statusDiv = document.getElementById('overall-status');
+            statusDiv.innerHTML = `
+                <h3>Tests Passed: ${passed}/${total} (${percentage}%)</h3>
+                <p>✅ = Passed, ❌ = Failed</p>
+                ${Object.entries(testResults).map(([name, result]) => 
+                    `<div>${result ? '✅' : '❌'} ${name}</div>`
+                ).join('')}
+            `;
+        }
+
+        // Auto-run basic tests on load
+        window.onload = async () => {
+            console.log('Starting auto-tests...');
+            await testEndpoint('manifest', '/manifest.xml');
+            await testEndpoint('icon32', '/assets/icon-32.png');
+            await testEndpoint('icon64', '/assets/icon-64.png');
+            await testEndpoint('functions.js', '/functions.js');
+            await testEndpoint('functions.json', '/functions.json');
+            await testEndpoint('taskpane', '/taskpane/index.html');
+            await testCORS();
+            await testAPI();
+        };
+    </script>
+</body>
+</html>
