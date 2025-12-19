@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://datasetiq.com';
+export const BASE_URL = 'https://www.datasetiq.com';
 export const CONNECT_MESSAGE = 'Please open DataSetIQ sidebar to connect.';
 const SERIES_PATH = '/api/public/sheets/series/';
 const ME_PATH = '/api/public/sheets/me';
@@ -26,6 +26,23 @@ export interface MeResponse {
   plan: string;
   quota: { used: number; limit: number; reset: string };
   status: string;
+}
+
+export const PAID_PLANS = ['premium', 'pro', 'enterprise', 'Premium', 'Pro', 'Enterprise'];
+
+export function isPaidPlan(plan?: string): boolean {
+  return plan ? PAID_PLANS.includes(plan) : false;
+}
+
+export const PREMIUM_FEATURES = {
+  FORMULA_BUILDER: 'Formula Builder Wizard',
+  RICH_METADATA: 'Full Metadata Panel',
+  MULTI_INSERT: 'Multi-Series Insert',
+  TEMPLATES: 'Templates Import/Export',
+};
+
+export function getUpgradeMessage(feature: string): string {
+  return `🔒 ${feature} is a Premium feature. Upgrade at datasetiq.com/pricing to unlock.`;
 }
 
 export interface SearchResult {

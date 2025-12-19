@@ -125,7 +125,7 @@
 
     <script>
         const BASE_URL = 'https://plugins.datasetiq.com';
-        const API_URL = 'https://datasetiq.com/api/public/sheets/series';
+        const API_URL = 'https://www.datasetiq.com/api/public/sheets/series';
         let testResults = {};
 
         async function testEndpoint(name, path) {
@@ -262,7 +262,7 @@
             resultDiv.textContent = 'Testing search API...';
 
             try {
-                const response = await fetch('https://datasetiq.com/api/public/search?q=GDP');
+                const response = await fetch('https://www.datasetiq.com/api/public/search?q=GDP');
                 const data = await response.json();
                 
                 testResults['search'] = response.status === 200 && Array.isArray(data);
@@ -288,7 +288,7 @@
             resultDiv.textContent = 'Testing search with source filter...';
 
             try {
-                const response = await fetch('https://datasetiq.com/api/public/search?q=GDP&source=FRED');
+                const response = await fetch('https://www.datasetiq.com/api/public/search?q=GDP&source=FRED');
                 const data = await response.json();
                 
                 testResults['search-source'] = response.status === 200 && Array.isArray(data);
@@ -314,7 +314,7 @@
             resultDiv.textContent = `Testing browse for ${source}...`;
 
             try {
-                const response = await fetch(`https://datasetiq.com/api/public/search?source=${source}&limit=50`);
+                const response = await fetch(`https://www.datasetiq.com/api/public/search?source=${source}&limit=50`);
                 const data = await response.json();
                 
                 testResults[`browse-${source}`] = response.status === 200 && Array.isArray(data);
