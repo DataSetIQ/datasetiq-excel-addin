@@ -40,7 +40,37 @@ export const PREMIUM_FEATURES = {
 };
 
 export function getUpgradeMessage(feature: string): string {
-  return `🔒 ${feature} is a Premium feature. Upgrade at datasetiq.com/pricing to unlock.`;
+  return `🔒 ${feature} is a Premium feature. Get your API key at datasetiq.com/dashboard/api-keys to unlock all premium features.`;
+}
+
+export function getDetailedErrorMessage(code: ErrorCode | undefined, status: number, context?: string): string {
+  const contextStr = context ? ` [${context}]` : '';
+  
+  switch (code) {
+    case 'NO_KEY':
+      return `❌ API key required${contextStr}. Open the DataSetIQ sidebar and connect your account to access data.`;
+    case 'INVALID_KEY':
+      return `❌ Invalid API key${contextStr}. Please verify your key at datasetiq.com/dashboard/api-keys and reconnect.`;
+    case 'REVOKED_KEY':
+      return `❌ API key has been revoked${contextStr}. Generate a new key at datasetiq.com/dashboard/api-keys.`;
+    case 'FREE_LIMIT':
+      return `⚠️ Free plan data limit reached${contextStr}. Upgrade to a paid plan at datasetiq.com/pricing for extended access.`;
+    case 'QUOTA_EXCEEDED':
+      return `⚠️ Daily quota exceeded${contextStr}. Your quota resets at midnight UTC. Upgrade at datasetiq.com/pricing for higher limits.`;
+    case 'PLAN_REQUIRED':
+      return `🔒 This feature requires a paid plan${contextStr}. Upgrade at datasetiq.com/pricing to unlock.`;
+    default:
+      if (status === 429) {
+        return `⏳ Rate limit reached${contextStr}. Please wait a moment before retrying.`;
+      }
+      if (status >= 500) {
+        return `🔧 Server temporarily unavailable${contextStr}. Our team has been notified. Please try again in a few minutes.`;
+      }
+      if (status === 404) {
+        return `❓ Series not found${contextStr}. Please verify the series ID is correct.`;
+      }
+      return `⚠️ Unable to fetch data${contextStr}. Please try again or contact support if the issue persists.`;
+  }
 }
 
 export interface SearchResult {

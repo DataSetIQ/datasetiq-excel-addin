@@ -43,7 +43,48 @@ const App: React.FC = () => {
 
   useEffect(() => {
     bootstrap();
-  }, []);
+    
+    // Keyboard shortcuts
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ctrl+K or Cmd+K - Focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setActiveTab('search');
+        setTimeout(() => {
+          document.getElementById('search-input')?.focus();
+        }, 100);
+      }
+      
+      // Ctrl+B or Cmd+B - Open Builder
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        if (isPaid) {
+          setActiveTab('builder');
+        } else {
+          setMessage('🔒 Formula Builder is a Premium feature. Upgrade at datasetiq.com/pricing');
+        }
+      }
+      
+      // Ctrl+T or Cmd+T - Open Templates
+      if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+        e.preventDefault();
+        if (isPaid) {
+          setActiveTab('templates');
+        } else {
+          setMessage('🔒 Templates is a Premium feature. Upgrade at datasetiq.com/pricing');
+        }
+      }
+      
+      // Escape - Close preview modal
+      if (e.key === 'Escape' && previewSeries) {
+        setPreviewSeries(null);
+        setPreviewData(null);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isPaid, previewSeries]);
 
   async function bootstrap() {
     const { key, supported } = await getStoredApiKey();
