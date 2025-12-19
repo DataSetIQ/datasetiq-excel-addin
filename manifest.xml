@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/mailappversionoverrides/1.1"
+  xsi:type="Workbook">
+  <Id>b9e5b806-7fbb-4e7b-9cc3-9b61c24ce60c</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>DataSetIQ</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="DataSetIQ for Excel" />
+  <Description DefaultValue="Pull DataSetIQ series directly into Excel with custom functions." />
+  <IconUrl DefaultValue="https://plugins.datasetiq.com/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://plugins.datasetiq.com/assets/icon-64.png" />
+  <SupportUrl DefaultValue="https://datasetiq.com/support" />
+  <AppDomains>
+    <AppDomain>https://datasetiq.com</AppDomain>
+    <AppDomain>https://plugins.datasetiq.com</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Workbook" />
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.1">
+      <Set Name="SharedRuntime" MinVersion="1.1" />
+      <Set Name="CustomFunctionsRuntime" MinVersion="1.3" />
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation resid="Taskpane.Url" />
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <Runtimes>
+          <Runtime resid="SharedRuntime.Url" lifetime="long" />
+        </Runtimes>
+        <AllFormFactors>
+          <ExtensionPoint xsi:type="SharedRuntime">
+            <SourceLocation resid="Taskpane.Url" />
+          </ExtensionPoint>
+          <ExtensionPoint xsi:type="CustomFunctions">
+            <Script>
+              <Load resid="Functions.Script" />
+            </Script>
+            <Page>
+              <SourceLocation resid="Functions.Page" />
+            </Page>
+            <Metadata>
+              <SourceLocation resid="Functions.Metadata" />
+            </Metadata>
+            <Namespace resid="Functions.Namespace" />
+          </ExtensionPoint>
+        </AllFormFactors>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon32" DefaultValue="https://plugins.datasetiq.com/assets/icon-32.png" />
+        <bt:Image id="Icon64" DefaultValue="https://plugins.datasetiq.com/assets/icon-64.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://plugins.datasetiq.com/taskpane/index.html" />
+        <bt:Url id="SharedRuntime.Url" DefaultValue="https://plugins.datasetiq.com/taskpane/index.html" />
+        <bt:Url id="Functions.Script" DefaultValue="https://plugins.datasetiq.com/functions.js" />
+        <bt:Url id="Functions.Page" DefaultValue="https://plugins.datasetiq.com/functions.html" />
+        <bt:Url id="Functions.Metadata" DefaultValue="https://plugins.datasetiq.com/functions.json" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="Functions.Namespace" DefaultValue="DSIQ" />
+      </bt:ShortStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

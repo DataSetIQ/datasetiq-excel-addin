@@ -1,0 +1,49 @@
+{
+  "functions": [
+    {
+      "name": "DSIQ",
+      "description": "Returns a dynamic array with Date and Value columns (newest first).",
+      "helpUrl": "https://datasetiq.com/support",
+      "parameters": [
+        { "name": "series_id", "description": "Series identifier", "type": "string" },
+        { "name": "frequency", "description": "Optional frequency override", "type": "string", "optional": true },
+        { "name": "start_date", "description": "Optional start date (YYYY-MM-DD)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "matrix" }
+    },
+    {
+      "name": "DSIQ_LATEST",
+      "description": "Returns the latest value available for a series.",
+      "helpUrl": "https://datasetiq.com/support",
+      "parameters": [{ "name": "series_id", "description": "Series identifier", "type": "string" }],
+      "result": { "type": "number" }
+    },
+    {
+      "name": "DSIQ_VALUE",
+      "description": "Returns the value on or before the specified date.",
+      "helpUrl": "https://datasetiq.com/support",
+      "parameters": [
+        { "name": "series_id", "description": "Series identifier", "type": "string" },
+        { "name": "date", "description": "Date (YYYY-MM-DD)", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "name": "DSIQ_YOY",
+      "description": "Returns pre-calculated year-over-year change.",
+      "helpUrl": "https://datasetiq.com/support",
+      "parameters": [{ "name": "series_id", "description": "Series identifier", "type": "string" }],
+      "result": { "type": "number" }
+    },
+    {
+      "name": "DSIQ_META",
+      "description": "Returns metadata fields (units, frequency, title, last_updated).",
+      "helpUrl": "https://datasetiq.com/support",
+      "parameters": [
+        { "name": "series_id", "description": "Series identifier", "type": "string" },
+        { "name": "field", "description": "Metadata field name", "type": "string" }
+      ],
+      "result": { "type": "string" }
+    }
+  ]
+}
