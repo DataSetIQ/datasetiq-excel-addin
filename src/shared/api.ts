@@ -164,7 +164,12 @@ export async function fetchSeries(options: FetchOptions): Promise<FetchResult> {
         } else if (body.data) {
           // Data response - transform [{date, value}] to [[date, value]]
           const dataArray = body.data.map((obs: any) => [obs.date, obs.value]);
-          transformedResponse = { data: dataArray, seriesId: body.seriesId };
+          transformedResponse = { 
+            data: dataArray, 
+            seriesId: body.seriesId,
+            status: body.status,
+            message: body.message
+          };
           
           // Handle scalar modes (latest, value, yoy)
           if (mode === 'latest' && dataArray.length > 0) {

@@ -106,7 +106,7 @@ const App: React.FC = () => {
 
   async function handleDisconnect() {
     await clearStoredApiKey();
-    setProfile(null);
+    setIsPaid(false);
     setView('disconnected');
     setMessage('Disconnected. Enter your API key to reconnect.');
   }
@@ -187,15 +187,66 @@ const App: React.FC = () => {
         fetchSeries({ seriesId, mode: 'meta', apiKey: key })
       ]);
       
+      // Check if this is a metadata-only dataset
+      const isMetadataOnly = latestRes.response?.status === 'metadata_only';
+      const isPending = latestRes.response?.status === 'ingestion_pending';
+      
       setPreviewData({
         latest: latestRes.response?.scalar,
         meta: metaRes.response?.meta,
-        error: latestRes.error || metaRes.error
+        error: latestRes.error || metaRes.error,
+        isMetadataOnly,
+        isPending,
+        statusMessage: latestRes.response?.message
       });
       setMessage('');
     } catch (err: any) {
       setPreviewData({ error: err.message });
       setMessage('');
+    }
+  }
+  
+  async function requestFullIngestion(seriesId: string) {
+    setMessage('Requesting full dataset ingestion...');
+    const { key } = await getStoredApiKey();
+    
+    try {
+      const response = await fetch(`https://www.datasetiq.com/api/datasets/${seriesId}/fetch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(key ? { 'Authorization': `Bearer ${key}` } : {})
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.status === 401 || data.requiresAuth) {
+        setMessage('⚠️ Authentication required. Visit datasetiq.com to sign up for full data access.');
+        return;
+      }
+      
+      if (response.status === 429 || data.upgradeToPro) {
+        setMessage(`⚠️ Monthly limit reached (${data.remaining || 0}/${data.limit || 100}). Upgrade to Pro for unlimited access.`);
+        return;
+      }
+      
+      if (!response.ok) {
+        setMessage(`⚠️ ${data.error || 'Failed to queue ingestion'}`);
+        return;
+      }
+      
+      setMessage('✅ Dataset ingestion started! Data will be available in 1-2 minutes.');
+      
+      // Update preview to show pending status
+      setPreviewData(prev => ({
+        ...prev,
+        isPending: true,
+        statusMessage: 'Dataset ingestion queued. Full data will be available shortly.'
+      }));
+      
+    } catch (err: any) {
+      setMessage(`⚠️ ${err.message || 'Failed to request ingestion'}`);
     }
   }
   
@@ -482,16 +533,16 @@ const App: React.FC = () => {
             <button 
               className={`tab premium-tab ${activeTab === 'builder' ? 'active' : ''}`}
               onClick={openBuilder}
-              title={isPaidPlan(profile?.plan) ? 'Formula Builder' : 'Premium Feature'}
+              title={isPaid ? 'Formula Builder' : 'Premium Feature'}
             >
-              🔧 Builder {!isPaidPlan(profile?.plan) && '🔒'}
+              🔧 Builder {!isPaid && '🔒'}
             </button>
             <button 
               className={`tab premium-tab ${activeTab === 'templates' ? 'active' : ''}`}
               onClick={openTemplates}
-              title={isPaidPlan(profile?.plan) ? 'Templates' : 'Premium Feature'}
+              title={isPaid ? 'Templates' : 'Premium Feature'}
             >
-              📁 Templates {!isPaidPlan(profile?.plan) && '🔒'}
+              📁 Templates {!isPaid && '🔒'}
             </button>
           </div>
           
@@ -512,7 +563,7 @@ const App: React.FC = () => {
             {results.length === 0 && <div className="muted">No results yet.</div>}
             {results.length > 0 && (
               <>
-                {isPaidPlan(profile?.plan) && (
+                {isPaid && (
                   <div style={{marginBottom: '12px', padding: '8px', background: '#f0f9ff', borderRadius: '6px'}}>
                     <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px'}}>
                       <input type="checkbox" onChange={(e) => {
@@ -534,7 +585,7 @@ const App: React.FC = () => {
                 <ul>
                   {results.map((r) => (
                     <li key={r.id} className="result-item">
-                      {isPaidPlan(profile?.plan) && (
+                      {isPaid && (
                         <input 
                           type="checkbox" 
                           checked={selectedForInsert.includes(r.id)}
@@ -882,12 +933,38 @@ const App: React.FC = () => {
             )}
             {previewData && !previewData.error && (
               <div className="preview-body">
+                {/* Metadata-only notice */}
+                {previewData.isMetadataOnly && (
+                  <div style={{marginBottom: '12px', padding: '10px', background: '#fef3c7', borderRadius: '6px', border: '1px solid #fbbf24'}}>
+                    <strong style={{color: '#92400e', display: 'block', marginBottom: '4px'}}>📊 Metadata Only</strong>
+                    <p style={{fontSize: '12px', color: '#78350f', margin: 0}}>
+                      This dataset hasn't been fully ingested yet. Click below to fetch the complete time-series data.
+                    </p>
+                    <button 
+                      onClick={() => requestFullIngestion(previewSeries!)}
+                      style={{marginTop: '8px', width: '100%', padding: '8px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'}}
+                    >
+                      🚀 Fetch Full Dataset
+                    </button>
+                  </div>
+                )}
+                
+                {/* Ingestion pending notice */}
+                {previewData.isPending && (
+                  <div style={{marginBottom: '12px', padding: '10px', background: '#dbeafe', borderRadius: '6px', border: '1px solid '#3b82f6'}}>
+                    <strong style={{color: '#1e3a8a', display: 'block', marginBottom: '4px'}}>⏳ Ingestion In Progress</strong>
+                    <p style={{fontSize: '12px', color: '#1e40af', margin: 0}}>
+                      {previewData.statusMessage || 'Full dataset is being fetched. This usually takes 1-2 minutes. Please check back shortly.'}
+                    </p>
+                  </div>
+                )}
+                
                 <div className="preview-item">
                   <strong>Latest Value:</strong> {previewData.latest ?? 'N/A'}
-                  <button className="copy-btn" onClick={() => navigator.clipboard.writeText(String(previewData.latest))} title="Copy">📋</button>
+                  {previewData.latest && <button className="copy-btn" onClick={() => navigator.clipboard.writeText(String(previewData.latest))} title="Copy">📋</button>}
                 </div>
                 
-                {isPaidPlan(profile?.plan) && previewData.meta && (
+                {isPaid && previewData.meta && (
                   <>
                     <div className="premium-badge" style={{marginTop: '12px', marginBottom: '8px'}}>✨ Full Metadata (Premium)</div>
                     {Object.entries(previewData.meta).map(([key, value]) => (
@@ -899,7 +976,7 @@ const App: React.FC = () => {
                   </>
                 )}
                 
-                {!isPaidPlan(profile?.plan) && previewData.meta && (
+                {!isPaid && previewData.meta && (
                   <>
                     {previewData.meta?.title && (
                       <div className="preview-item">
