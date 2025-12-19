@@ -6,7 +6,7 @@
   "scripts": {
     "start": "vite",
     "build:functions": "esbuild src/functions/index.ts --bundle --format=iife --target=es2019 --outfile=dist/functions.js --global-name=datasetiqFunctions",
-    "build:copy": "mkdir -p dist && cp src/functions/functions.html dist/functions.html && cp src/functions/functions.json dist/functions.json",
+    "build:copy": "mkdir -p dist && cp src/functions/functions.html dist/functions.html && cp src/functions/functions.json dist/functions.json && mkdir -p dist/assets && cp assets/*.png dist/assets/",
     "build:taskpane": "vite build",
     "build": "npm run build:functions && npm run build:copy && npm run build:taskpane",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
