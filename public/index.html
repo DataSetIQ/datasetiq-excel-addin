@@ -11,166 +11,290 @@
             box-sizing: border-box;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
             line-height: 1.6;
-            color: #0f172a;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #e2e8f0;
+            background: #0f172a;
             min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 24px 0;
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            font-size: 24px;
         }
-        .container {
-            max-width: 800px;
-            background: white;
-            padding: 60px 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        .nav-links {
+            display: flex;
+            gap: 32px;
+        }
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover {
+            color: #fff;
+        }
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 40px;
             text-align: center;
         }
-        h1 {
-            font-size: 48px;
+        .hero h1 {
+            font-size: 56px;
             font-weight: 700;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            line-height: 1.2;
         }
-        .subtitle {
+        .hero .subtitle {
             font-size: 24px;
-            color: #64748b;
-            margin-bottom: 40px;
+            color: #94a3b8;
+            margin-bottom: 16px;
         }
-        .description {
+        .hero .description {
             font-size: 18px;
-            color: #475569;
-            margin-bottom: 40px;
+            color: #cbd5e1;
+            max-width: 800px;
+            margin: 0 auto 48px;
             line-height: 1.8;
         }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 40px 0;
-            text-align: left;
-        }
-        .feature {
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-        }
-        .feature h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-            color: #0f172a;
-        }
-        .feature p {
-            font-size: 14px;
-            color: #64748b;
-        }
-        .cta {
-            margin-top: 40px;
-        }
-        .button {
-            display: inline-block;
-            padding: 16px 32px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 18px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin: 10px;
-        }
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-        .button.secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-        .files {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 1px solid #e2e8f0;
-        }
-        .files h3 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: #0f172a;
-        }
-        .file-list {
+        .cta-buttons {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            gap: 16px;
             justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 64px;
         }
-        .file-link {
-            padding: 10px 20px;
-            background: #f1f5f9;
-            color: #475569;
-            text-decoration: none;
+        .btn {
+            padding: 14px 32px;
             border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Courier New', monospace;
-            transition: background 0.2s;
+            font-weight: 600;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .file-link:hover {
-            background: #e2e8f0;
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+        }
+        .btn-secondary:hover {
+            border-color: #64748b;
+            background: #1e293b;
+        }
+        .features {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px 80px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 32px;
+            transition: all 0.3s;
+        }
+        .feature-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+            transform: translateY(-4px);
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .feature-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        .feature-card p {
+            font-size: 15px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        .resources {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 40px;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+        }
+        .resources h2 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 48px;
+            color: #fff;
+        }
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .resource-item {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .resource-item:hover {
+            border-color: #3b82f6;
+            color: #60a5fa;
+            background: #1e293b;
+        }
+        .footer {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 40px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #94a3b8;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            color: #60a5fa;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📊 DataSetIQ</h1>
-        <div class="subtitle">Excel Add-in for Economic Data</div>
-        
-        <p class="description">
-            Access 15+ economic data sources directly in Excel. Insert time-series data with custom functions, 
-            search thousands of datasets, and build dynamic spreadsheets connected to real-time economic indicators.
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <span>DataSetIQ</span>
+            </div>
+            <nav class="nav-links">
+                <a href="https://datasetiq.com">Home</a>
+                <a href="https://datasetiq.com/docs">Documentation</a>
+                <a href="https://datasetiq.com/pricing">Pricing</a>
+                <a href="https://datasetiq.com/support">Support</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Excel Add-in for Economic Data</h1>
+            <p class="subtitle">Professional time-series analysis in Excel</p>
+            <p class="description">
+                Access 15+ economic data sources directly in Excel. Insert time-series data with custom functions, 
+                search thousands of datasets, and build dynamic spreadsheets connected to real-time economic indicators 
+                from FRED, BLS, IMF, World Bank, ECB, and more.
+            </p>
+            <div class="cta-buttons">
+                <a href="https://datasetiq.com/docs/excel" class="btn btn-primary">
+                    📖 View Documentation
+                </a>
+                <a href="/manifest.xml" class="btn btn-secondary" download>
+                    ⬇️ Download Manifest
+                </a>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Smart Search</h3>
+                <p>Browse and search across FRED, BLS, BEA, IMF, World Bank, ECB, OECD, Eurostat, and 7 other authoritative sources</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Custom Functions</h3>
+                <p>Use DSIQ() formulas to pull time-series data directly into cells with automatic updates and refresh</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <h3>Formula Builder</h3>
+                <p>Wizard interface to construct formulas with frequency conversion, date ranges, and data transformations</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📁</div>
+                <h3>Templates</h3>
+                <p>Save and reuse formula collections across workbooks for consistent analysis workflows</p>
+            </div>
+        </section>
+
+        <section class="resources">
+            <h2>Add-in Resources</h2>
+            <div class="resource-grid">
+                <a href="/manifest.xml" class="resource-item">manifest.xml</a>
+                <a href="/functions.html" class="resource-item">functions.html</a>
+                <a href="/functions.js" class="resource-item">functions.js</a>
+                <a href="/functions.json" class="resource-item">functions.json</a>
+                <a href="/taskpane/index.html" class="resource-item">taskpane/index.html</a>
+                <a href="/test.html" class="resource-item">test.html</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 DataSetIQ. All rights reserved. | 
+            <a href="https://datasetiq.com/privacy">Privacy</a> | 
+            <a href="https://datasetiq.com/terms">Terms</a>
         </p>
-
-        <div class="features">
-            <div class="feature">
-                <h3>🔍 Smart Search</h3>
-                <p>Browse and search across FRED, BLS, IMF, World Bank, and 12 other sources</p>
-            </div>
-            <div class="feature">
-                <h3>⚡ Custom Functions</h3>
-                <p>Use DSIQ() formulas to pull data directly into cells with automatic updates</p>
-            </div>
-            <div class="feature">
-                <h3>🔧 Formula Builder</h3>
-                <p>Wizard interface to construct formulas with frequency, date ranges, and transformations</p>
-            </div>
-            <div class="feature">
-                <h3>📁 Templates</h3>
-                <p>Save and reuse formula collections across workbooks</p>
-            </div>
-        </div>
-
-        <div class="cta">
-            <a href="https://datasetiq.com/docs/excel" class="button">View Documentation</a>
-            <a href="manifest.xml" class="button secondary">Download Manifest</a>
-        </div>
-
-        <div class="files">
-            <h3>Add-in Resources</h3>
-            <div class="file-list">
-                <a href="/manifest.xml" class="file-link">manifest.xml</a>
-                <a href="/functions.html" class="file-link">functions.html</a>
-                <a href="/functions.js" class="file-link">functions.js</a>
-                <a href="/functions.json" class="file-link">functions.json</a>
-                <a href="/taskpane/index.html" class="file-link">taskpane/index.html</a>
-                <a href="/test.html" class="file-link">test.html</a>
-            </div>
-        </div>
-    </div>
+    </footer>
 </body>
 </html>
