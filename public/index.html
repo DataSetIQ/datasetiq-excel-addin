@@ -62,6 +62,45 @@
         .nav-links a:hover {
             color: #fff;
         }
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 20px;
+            }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #1e293b;
+                border-top: 1px solid #334155;
+                flex-direction: column;
+                gap: 0;
+                padding: 0;
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .nav-links a {
+                padding: 16px 20px;
+                border-bottom: 1px solid #334155;
+            }
+            .mobile-menu-btn {
+                display: block;
+            }
+            .header {
+                position: relative;
+            }
+        }
         .hero {
             max-width: 1200px;
             margin: 0 auto;
@@ -77,6 +116,20 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             line-height: 1.2;
+        }
+        @media (max-width: 768px) {
+            .hero {
+                padding: 40px 20px;
+            }
+            .hero h1 {
+                font-size: 36px;
+            }
+            .hero .subtitle {
+                font-size: 18px;
+            }
+            .hero .description {
+                font-size: 16px;
+            }
         }
         .hero .subtitle {
             font-size: 24px;
@@ -134,6 +187,12 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
         }
+        @media (max-width: 768px) {
+            .features {
+                padding: 0 20px 40px;
+                grid-template-columns: 1fr;
+            }
+        }
         .feature-card {
             background: #1e293b;
             border: 1px solid #334155;
@@ -173,6 +232,14 @@
             padding: 80px 40px;
             background: #1e293b;
             border-top: 1px solid #334155;
+        }
+        @media (max-width: 768px) {
+            .resources {
+                padding: 40px 20px;
+            }
+            .resource-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
         }
         .resources h2 {
             font-size: 32px;
@@ -226,12 +293,15 @@
                 <div class="logo-icon">📊</div>
                 <span>DataSetIQ</span>
             </div>
-            <nav class="nav-links">
+            <nav class="nav-links" id="navLinks">
                 <a href="https://datasetiq.com">Home</a>
                 <a href="https://datasetiq.com/docs">Documentation</a>
                 <a href="https://datasetiq.com/pricing">Pricing</a>
                 <a href="https://datasetiq.com/support">Support</a>
             </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                ☰
+            </button>
         </div>
     </header>
 
@@ -296,5 +366,34 @@
             <a href="https://datasetiq.com/terms">Terms</a>
         </p>
     </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+        
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function() {
+                navLinks.classList.toggle('active');
+                this.textContent = navLinks.classList.contains('active') ? '✕' : '☰';
+            });
+            
+            // Close menu when clicking a link
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function() {
+                    navLinks.classList.remove('active');
+                    mobileMenuBtn.textContent = '☰';
+                });
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.header-content')) {
+                    navLinks.classList.remove('active');
+                    mobileMenuBtn.textContent = '☰';
+                }
+            });
+        }
+    </script>
 </body>
 </html>
