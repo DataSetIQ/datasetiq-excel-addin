@@ -29,7 +29,7 @@
     </Sets>
   </Requirements>
   <DefaultSettings>
-    <SourceLocation resid="Taskpane.Url" />
+    <SourceLocation DefaultValue="https://plugins.datasetiq.com/taskpane/index.html" />
   </DefaultSettings>
   <Permissions>ReadWriteDocument</Permissions>
 
