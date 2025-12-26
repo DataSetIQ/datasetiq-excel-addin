@@ -9,10 +9,12 @@
   <ProviderName>DataSetIQ</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="DataSetIQ for Excel" />
-  <Description DefaultValue="Pull DataSetIQ series directly into Excel with custom functions." />
+  <Description DefaultValue="Access 40M+ economic time series from FRED, BLS, World Bank, IMF, OECD, and 200+ data sources with custom functions. Real-time economic data, financial indicators, and statistics directly in Excel." />
   <IconUrl DefaultValue="https://plugins.datasetiq.com/assets/icon-32.png" />
   <HighResolutionIconUrl DefaultValue="https://plugins.datasetiq.com/assets/icon-64.png" />
   <SupportUrl DefaultValue="https://datasetiq.com/plugins/support" />
+  <PrivacyUrl DefaultValue="https://datasetiq.com/plugins/privacy" />
+  <TermsOfUseUrl DefaultValue="https://datasetiq.com/plugins/terms" />
   <AppDomains>
     <AppDomain>https://datasetiq.com</AppDomain>
     <AppDomain>https://plugins.datasetiq.com</AppDomain>
